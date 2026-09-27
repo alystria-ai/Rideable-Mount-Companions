@@ -1,0 +1,10 @@
+/runtime/*
+!/runtime/.gitkeep
+/native/*.dll
+*.log
+__pycache__/
+
+/dist/
+.env
+.env.*
+*.private.json
