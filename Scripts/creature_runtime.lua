@@ -24,6 +24,7 @@ function M.new(modRoot,sharedPayload,log,settings,previous)
  end
  local self={roster=roster,selectedId=roster[1].id,status='Choose a creature, then summon it.',size=settings.size or 100,speed=settings.speed or 100,replies=settings.replies~=false,log=log or function()end}
  self.service=previous and previous.service or Service.new(sharedPayload..'/runtime','creature-companion-mounts');self.ai=previous and previous.ai or SDK.new(sharedPayload..'/runtime','creature-companion-mounts')
+ self.pets=dofile(modRoot..'/Scripts/pets.lua').new(sharedPayload)
  self.seats=settings.seats or{}
  function self:applySeat()
   if not self.active or not self.mountState then return end
@@ -32,7 +33,7 @@ function M.new(modRoot,sharedPayload,log,settings,previous)
  function self:view()
   local a=self.active;local mounted=self.mountState and self.mountState.state=='mounted'
   return {roster=self.roster,selected=byId[self.selectedId],selectedId=self.selectedId,
-   active=a and{id=a.definition.id,name=a.definition.name,actor=a.actor,memberId=a.memberId,mounted=mounted,rideable=a.definition.rideable~=false},
+   active=a and{id=a.definition.id,name=a.definition.name,actor=a.actor,memberId=a.memberId,mounted=mounted,rideable=a.definition.rideable~=false,pet=a.definition.pet==true},
    mounted=mounted,mountState=self.mountState and self.mountState.state or'unmounted',loading=self.requestId~=nil or self.dismissId~=nil or self.dismissPending==true or self.recovering==true or(self.mountState and self.mountState.state=='preparing')or false,status=self.status,size=self.size,speed=self.speed}
  end
  function self:select(id)if byId[id]then self.selectedId=id end end
@@ -45,7 +46,7 @@ function M.new(modRoot,sharedPayload,log,settings,previous)
    if not ok then self.replacement=nil end
    return ok,message
   end
-  self.selectedId=r.id;self.requestDefinition=r;self.requestId=self.service:summon(r.catalogueId);self.status='Loading '..r.name..'...';return true
+  self.selectedId=r.id;self.requestDefinition=r;self.requestId=r.pet and self.pets.summon(r.catalogueId)or self.service:summon(r.catalogueId);self.status='Loading '..r.name..'...';return true
  end
  function self:dismiss()
   if self.dismissId or self.dismissPending then self.status='Dismissal is already pending';return false,self.status end
@@ -57,6 +58,12 @@ function M.new(modRoot,sharedPayload,log,settings,previous)
    end
    if self.mountState.state~='unmounted'then self.dismissPending=true;self.status='Restoring Coen before dismissing the creature...';return true,self.status end
   end
+  if self.active.definition.pet then
+   self.pets.dismiss(self.active.memberId);local replacement=self.replacement
+   self.ai:unregister('creature');self.active=nil;self.replacement=nil;self.status='Creature dismissed'
+   if replacement then return self:summon(replacement)end
+   return true,self.status
+  end
   self.dismissId=self.service:dismiss(self.active.memberId);self.status='Dismissing creature...';return true,self.status
  end
  function self:toggleMount()
@@ -66,7 +73,9 @@ function M.new(modRoot,sharedPayload,log,settings,previous)
  end
  function self:mount()
   if self.dismissId or self.dismissPending then self.status='Wait for dismissal to finish';return false,self.status end
-  if not self.active or not self.mountState then self.status='Summon a creature first';return false,self.status end
+  if not self.active then self.status='Summon a creature from Shift+F5 first; F5 companions cannot be ridden';return false,self.status end
+  if self.active.definition.pet then self.status='Pets follow without fighting or riding';return false,self.status end
+  if not self.mountState then self.status='Rider is not ready';return false,self.status end
   if self.active.definition.rideable==false then self.status='This creature can fight beside you, but has no native ground-riding gait.';return false,self.status end
   local ok,message=self.mountState:request(self.pc);self.status=message or(ok and'Ready to ride'or'Cannot ride yet')
   self.log((ok and 'Mount requested: 'or 'Mount unavailable: ')..self.status)
@@ -102,12 +111,14 @@ function M.new(modRoot,sharedPayload,log,settings,previous)
  end
  function self:registerAI()
   if not self.active then return end
+  if self.active.definition.pet then self.ai:unregister('creature');return end
   local r=self.active.definition;local characterId=profileFor(r.id);if not characterId then return false end
   local mount=self.mountState and self.mountState.state or'unmounted'
   local available=mount=='unmounted'
-  local actions=available and{'Follow','Stop Walking','Look At Player','Leave','Come Here','Attack Nearby Enemies'}or{}
+  local actions=available and{'Follow','Stop Walking','Look At Player','Leave','Come Here'}or{}
+  if available and not r.pet then actions[#actions+1]='Attack Nearby Enemies'end
   local state=available and(self.lastOrder and 'Last requested order: '..self.lastOrder or'Following Coen')or mount=='mounted'and'Coen is currently riding this creature'or'Riding transition in progress'
-  self.ai:register('creature',self.active.actor,{characterId=characterId,name=r.name,silentReplies=not self.replies,localActionsOnly=not self.replies,
+  self.ai:register('creature',self.active.actor,{characterId=characterId,name=r.name,automaticReactions=false,silentReplies=not self.replies,localActionsOnly=not self.replies,
    actions=actions,
    context='You are Coen\'s allied '..r.species..' companion named '..r.name..'. '..state..'. Use your own stable personality and creature background. Speak ordinary dialogue in the player\'s language. No stage directions, animal noises, sniffs or growls. Briefly acknowledge supported orders and emit the appropriate listed action. You can also converse about the journey. No movement orders are available during riding or a riding transition. Do not invent actions or claim success before the game confirms it. Use the current species and identity, not another creature from earlier history.'})
   self.registeredProfile=characterId
@@ -119,13 +130,14 @@ function M.new(modRoot,sharedPayload,log,settings,previous)
   self.recovering=nil;self.mountState=nil;self.movement=nil
   self.active={actor=actor,identity=identity(actor),memberId=status.memberId,definition=r,baseScale={X=scale.X,Y=scale.Y,Z=scale.Z}}
   self.requestId=nil;self.requestDefinition=nil;self:applySize()
-  self.movement=Movement.new(actor,r.species);self.movement:setSpeed(self.speed)
+  if not r.pet then self.movement=Movement.new(actor,r.species);self.movement:setSpeed(self.speed)end
   self:registerAI()
-  self.mountState=Mount.new(actor,status.memberId,self.movement,self.ai,self.service,self.log)
+  if not r.pet then self.mountState=Mount.new(actor,status.memberId,self.movement,self.ai,self.service,self.log)end
   self:applySeat()
   self.status=r.name..' ready.'
  end
  function self:forget()
+  self.pets.reset(true)
   if self.mountState then self.mountState:forget()end
   self.ai:unregister('creature');self.active=nil;self.requestId=nil;self.requestDefinition=nil;self.mountState=nil;self.movement=nil;self.lastOrder=nil
   self.dismissId=nil;self.dismissPending=nil;self.orderId=nil;self.replacement=nil;self.hostEpoch=nil;self.recovering=nil
@@ -137,12 +149,13 @@ function M.new(modRoot,sharedPayload,log,settings,previous)
   local world=identity(pc.Pawn:GetWorld())..'/'..identity(pc.Pawn)
   if self.world and world~=self.world then self:forget()end;self.world=world
   self.service:tick(pc)
+  self.pets.tick(pc)
   if self.hostEpoch and self.service.epoch~=self.hostEpoch then
    if self.mountState and self.mountState:current()then self.mountState:restore(self.mountState:safeExitPoint())end
    self:forget();self.status='The companion service restarted. Summon a creature again.'
   end
   self.hostEpoch=self.service.epoch
-  if self.active and self.voicePollAt~=os.time()then
+  if self.active and not self.active.definition.pet and self.voicePollAt~=os.time()then
    self.voicePollAt=os.time()
    if profileFor(self.active.definition.id)~=self.registeredProfile then self:registerAI()end
   end
@@ -161,14 +174,17 @@ function M.new(modRoot,sharedPayload,log,settings,previous)
    end
   end
   if self.requestId then
-   local request=self.service:status(self.requestId)
+   local isPet=self.requestDefinition and self.requestDefinition.pet
+   local request=isPet and self.pets.info(self.requestId)or self.service:status(self.requestId)
    if request and request.phase=='ready'and valid(request.actor)then self:attach(request)
-   elseif request and(request.phase=='failed'or request.phase=='error'or request.phase=='cancelled'or request.phase=='unavailable'and request.error)then self.status=request.error or'Creature could not be loaded';self.requestId=nil;self.requestDefinition=nil
+   elseif request and(request.phase=='failed'or request.phase=='error'or request.phase=='cancelled'or request.phase=='unavailable'and request.error)then
+    if isPet then self.pets.dismiss(self.requestId)end
+    self.status=request.error or'Creature could not be loaded';self.requestId=nil;self.requestDefinition=nil
    elseif request and request.phase=='unavailable'then self.status='Waiting for the companion service to resume...'end
   end
   if self.active then
    if not self.dismissId then
-    local member=self.service:status(self.active.memberId)
+    local member=self.active.definition.pet and self.pets.info(self.active.memberId)or self.service:status(self.active.memberId)
     if member and member.phase=='loading'then
      if not self.recovering then
       if self.mountState and self.mountState:current()then self.mountState:restore(self.mountState:safeExitPoint())end
@@ -207,7 +223,7 @@ function M.new(modRoot,sharedPayload,log,settings,previous)
  end
  function self:shutdown()
   if self.mountState and self.mountState:current()then self.mountState:restore(self.mountState:safeExitPoint())end
-  self.ai:close();self.service:close()
+  self.pets.reset(false);self.ai:close();self.service:close()
  end
  if previous then
   assert(not previous.requestId and not previous.dismissId and not previous.dismissPending and not previous.orderId and not previous.recovering,'Creature operation still active')
@@ -215,12 +231,15 @@ function M.new(modRoot,sharedPayload,log,settings,previous)
   self.pc=previous.pc;self.world=previous.world;self.hostEpoch=previous.hostEpoch
   self.selectedId=byId[previous.selectedId]and previous.selectedId or self.selectedId
   self.lastOrder=previous.lastOrder;self.status=previous.status
+  assert(not previous.active or not previous.active.definition.pet,'Dismiss the pet before reloading')
   if previous.active then
    local a=previous.active
    assert(valid(a.actor)and identity(a.actor)==a.identity and byId[a.definition.id],'Creature changed during reload')
    self.active={actor=a.actor,identity=a.identity,memberId=a.memberId,definition=byId[a.definition.id],baseScale=a.baseScale}
-   self.movement=Movement.new(a.actor,self.active.definition.species);self.movement:setSpeed(self.speed)
-   self.mountState=Mount.new(a.actor,a.memberId,self.movement,self.ai,self.service,self.log)
+   if not self.active.definition.pet then
+    self.movement=Movement.new(a.actor,self.active.definition.species);self.movement:setSpeed(self.speed)
+    self.mountState=Mount.new(a.actor,a.memberId,self.movement,self.ai,self.service,self.log)
+   end
    self:applySeat()
   end
  end

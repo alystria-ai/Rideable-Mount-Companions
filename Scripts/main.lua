@@ -7,6 +7,11 @@ local function log(message)
  local f=io.open(modRoot..'/runtime/status.txt','w');if f then f:write(os.date()..' '..tostring(message));f:close()end
 end
 local ok,err=pcall(function()
+ for _,path in ipairs({'sdk/CompanionCreatures.lua','sdk/CompanionAI.lua'})do
+  local file=io.open(sharedPayload..'/'..path,'r')
+  assert(file,'Install AI NPC Companions System 0.5.6 or later, both Scripts and Runtime; missing '..path)
+  file:close()
+ end
  local Menu=dofile(modRoot..'/Scripts/creature_menu.lua')
  local settings=Menu.configure({sharedPayload=sharedPayload,configPath=modRoot..'/config/config.ini'})
  local Controller=dofile(modRoot..'/Scripts/creature_runtime.lua')
@@ -15,7 +20,7 @@ local ok,err=pcall(function()
  if previous and previous.stop then previous.stop()end
  local instance={controller=controller,alive=true};_G.CreatureCompanionMounts=instance
  function instance.stop()instance.alive=false;Menu.close();controller:shutdown()end
- local watched={'creature_runtime','creature_menu','settings','keybindings','roster','movement','mount','localization','translations'}
+ local watched={'creature_runtime','creature_menu','settings','keybindings','roster','pets','movement','mount','localization','translations'}
  local function snapshot()
   local parts={}
   for _,name in ipairs(watched)do
@@ -74,7 +79,10 @@ local ok,err=pcall(function()
    end
    local pc=playerController
    if not pc or not pc:IsValid()then return end
-   controller:update(pc,step)
+   -- A creature service error must not prevent the menu heartbeat and Help
+   -- from running, otherwise its shortcuts silently disappear as well.
+   local updated,updateError=pcall(controller.update,controller,pc,step)
+   if not updated and os.time()-lastError>=5 then lastError=os.time();log('Creature update: '..tostring(updateError))end
    if not instance.reloading then Menu.tick(pc,controller)end
    reloadIfReady()
   end)

@@ -7,8 +7,10 @@ Choose your creature in Shift+F5, adjust its size, riding speed and seat positio
 ## Features
 
 - **Ride native beasts:** 28 combat-capable creature entries, including 24 riding candidates and four combat-only Tatzelwurm variants. Wolves, bears, dogs, boars, Gargoyles, Mares and the Beast of Balaur are among the choices.
+- **Protected pets:** a separate Pets section starts with the White House Cat, followed by Rabbit, Chicken, Goat and Sheep. Pets follow without fighting, walk nearby and use their native running profile to catch up. They cannot be ridden and are protected from damage. They remain quiet. Petting is not implemented.
+- **Speak when addressed:** beasts answer direct text or voice conversations but do not join automatic exploration, loot or battle comments. Human companions keep their own reaction preferences.
 - **Give spoken or typed commands:** ask your creature to follow, stop, come here, look at you, attack nearby enemies or leave. A departing creature walks away before disappearing when its route is clear. Movement orders are available while dismounted.
-- **Talk to your companion:** spoken replies are On by default, with individual personalities, species lore and English or multilingual voices. Creatures share the main mod's current quest, surroundings and recent battle context, and can use its automatic reaction settings while unmounted.
+- **Talk to your companion:** spoken replies are On by default, with individual personalities, species lore and English or multilingual voices. Creatures share the main mod's current quest, surroundings and recent battle context, and use its conversation service.
 - **Fight together:** entering combat triggers a safe dismount, allowing the creature to use its native attacks alongside Coen. Mount again when the fight is over.
 - **Make the ride your own:** adjust creature size and riding speed from 50% to 250%, with separate height, forward/back and sideways seat offsets saved for each creature.
 - **Choose your view:** switch between first- and third-person riding with F4, using the main mod's camera preferences.
@@ -16,17 +18,33 @@ Choose your creature in Shift+F5, adjust its size, riding speed and seat positio
 - **A familiar native menu:** Summon, Party, Settings, Controls and Help pages, remappable shortcuts, loading feedback and ten interface languages. One creature is active at a time; summoning another replaces it.
 - **One addon download:** uses AI NPC Companions System for conversations and companion services, with no second runtime to install.
 
-This first release includes experimental riding rigs. Wolf galloping, Dog galloping and Gargoyle ground steering have been confirmed in game; other rigs, including the latest Bear gait changes, still need visual confirmation. Gargoyles currently travel on the ground. Tatzelwurms can accompany you in combat but cannot be ridden.
+Riding rigs remain experimental. Wolf galloping, Dog galloping and Gargoyle ground steering have been confirmed in game; other rigs, including the latest Bear gait changes, still need visual confirmation. Gargoyles currently travel on the ground. Tatzelwurms can accompany you in combat but cannot be ridden.
+
+## What changed in 0.1.1
+
+- Added Beasts and Pets sections, with White House Cat first among five protected, non-rideable pets.
+- Pets use native walking and catch-up movement, without combat AI or spoken replies.
+- Beasts opt out of automatic comments through the shared API, independently of normal conversations and commands.
+- Clarified that riding requires summoning through Shift+F5 and mounting with Shift+F6.
 
 ## Requirements
 
 - The Blood of Dawnwalker 1.05.
-- [AI NPC Companions System 0.5.5 or later](https://github.com/alystria-ai/AI-Companion-Mod-For-Blood-of-Dawnwalker/releases/latest). Install Complete, or both Scripts and Runtime. Earlier releases lack the required creature service.
+- [AI NPC Companions System 0.5.6 or later](https://github.com/alystria-ai/AI-Companion-Mod-For-Blood-of-Dawnwalker/releases/latest). Install Complete, or both Scripts and Runtime. Earlier releases lack the required creature service. Pets are implemented in this addon. Main mod 0.5.6 is required for the per-creature automatic-reaction opt-out.
 - [UE4SS for Dawnwalker 1.2.1 RC6](https://www.nexusmods.com/thebloodofdawnwalker/mods/18) and [Dawnwalker Mod Menu 1.0.7 or later](https://www.nexusmods.com/thebloodofdawnwalker/mods/271).
 
 This add-on uses the main mod's running helper to interpret orders. It does not contain an API key or launch a second helper.
 
 Rideable Mount Companions appears by name in the game's Mod Settings list. Its full Summon, Party, Settings, Controls and Help panel opens with Shift+F5. Both mods' shortcuts depend on the main companion service finishing startup.
+
+## How to ride
+
+1. Load a save and press **Shift+F5** to open **Rideable Mount Companions**.
+2. In **Summon > Beasts**, select a Wolf or another rideable creature, then choose **Summon**.
+3. Let loading finish and approach the creature in gameplay.
+4. Press **Shift+F6** to mount. Use **WASD** to move and hold **Shift** to run. Press **Shift+F6** again to dismount.
+
+The main mod's **F5** menu also summons animals, but those are ordinary companions, not mounts. To ride one, summon it through **Shift+F5**. Pets and creatures labelled combat-only cannot be ridden. If mounting fails, open **Shift+F5 > Party** and read its status message; include that message with your support report.
 
 ## Controls
 
@@ -43,6 +61,8 @@ Open **Controls** to change the menu and mount shortcuts. Select an action, hold
 
 You can also edit `config/keybindings.ini`. Changes are picked up while the game runs; invalid or duplicate values leave the previous working shortcuts active.
 
+If Shift+F5 does nothing, first check whether the main mod opens with F5. Install matching **Scripts and Runtime from AI NPC Companions System 0.5.6 or later**, or its Complete download, alongside **Dawnwalker Mod Menu 1.0.7 or later**. The mount addon alone does not provide the shortcut helper. Its `CreatureCompanionMounts` folder must sit beside `DawnwalkerConvai` under `ue4ss/Mods`, with `enabled.txt` and `Scripts/main.lua` present. Restart the game after installing or updating these requirements. If another overlay uses Shift+F5, change the menu binding in `config/keybindings.ini`, for example to `Shift+F10`. For troubleshooting, include the main mod's **Help > Copy logs** report and `CreatureCompanionMounts/runtime/status.txt`.
+
 ```ini
 [Controls]
 Menu = Shift+F5
@@ -51,7 +71,7 @@ Mount = Shift+F6
 
 ## Creature menu
 
-- **Summon:** choose a creature, set size, riding speed and rider position, then select Summon. Selecting its name alone does not spawn it. Size and speed range from 50% to 250%, with 100% defaults. Dismount before changing size.
+- **Summon:** switch between **Beasts** and **Pets**, then choose a creature, set size, riding speed and rider position, then select Summon. Selecting its name alone does not spawn it. Pets hide riding-speed and seat controls. Size and speed range from 50% to 250%, with 100% defaults. Dismount before changing size.
 - **Party:** view your current creature and operation status, then Mount, Dismount or Dismiss it. A single creature is active per player; summoning a replacement dismisses the previous one after dismounting.
 - **Rider positioning on Summon:** height, forward/back and left/right offsets save separately for each creature. Starting values are estimates for its body shape, added to the automatic back-bone and seated-pelvis alignment. Editing a different creature never moves your current rider. Changes to the ridden creature apply live. Positive values move up, forward and right. Height ranges from -60 to 100 cm, forward/back from -100 to 100 cm, and sideways from -75 to 75 cm. Reset rider position restores that creature’s estimated defaults.
 - **Settings:** choose interface language, English or multilingual voices, and whether creatures give spoken replies.
@@ -121,7 +141,7 @@ Install this addon from **one ZIP**. It includes Lua scripts, configuration, pub
 
 The Git repository and release workflow are prepared locally. No release is published by saving these files or making a commit. `tools/Publish-Repository.ps1` prints the intended repository name by default. Its explicit `-Publish` switch creates `alystria-ai/Rideable-Mount-Companions` and pushes reviewed committed source to `main`.
 
-Run `python tools/build_localization.py` after editing `localization/ui.json`. Run `tools/Build-Release.ps1` to create the addon ZIP and SHA-256 checksum in `dist`. The builder checks that every roster entry has both profile IDs and includes only the addon files. It never provisions characters or reads credentials.
+Run `python tools/build_localization.py` after editing `localization/ui.json`. Run `tools/Build-Release.ps1` to create the addon ZIP and SHA-256 checksum in `dist`. The builder checks that every speaking beast has both profile IDs and includes only the addon files. It never provisions characters or reads credentials.
 
 The GitHub Actions workflow is manual only. By default it builds downloadable workflow artifacts. Its separate **publish_draft** option can create a draft release from `main`; it never publishes that draft automatically. This addon build needs no API-key secret because the main mod supplies the conversation service.
 

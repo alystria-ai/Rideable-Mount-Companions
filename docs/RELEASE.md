@@ -1,25 +1,23 @@
-Ride native creatures beside Coen or mount them for travel. Adjust size, speed and rider position, give orders, and hear distinct personalities with English or multilingual voices.
+Bring a White House Cat along for the journey, or choose another protected pet from the new Pets section.
 
-- 28 combat-capable creature definitions: 24 riding candidates and four combat-only Tatzelwurm variants. Wolf and Dog galloping and Gargoyle ground steering have been confirmed in game. Other rigs, including the latest Bear gait changes, still need visual confirmation. Gargoyles currently travel on the ground.
-- Summon, Party, Settings, Controls and Help pages, with a separate Mod Settings entry.
-- English Kokoro voices for conversation, plus multilingual voice profiles. Cute animals use female voices; monsters use male voices.
-- Ten interface languages. Voice mode can follow the interface language or be chosen separately.
-- Automatic dismount in combat and native allied fighting for creatures that have attacks.
-- Spoken replies On by default. Off accepts fixed local text commands without a conversation request.
-- Size and riding speed default to 100%, adjustable from 50% to 250%. Rider offsets are saved separately for each creature. Interface and voice language default to Auto.
-- First- and third-person riding share the main mod's camera preferences and F4 shortcut.
-- Settled beasts keep space for their scaled bodies and tolerate nearby steps and circling before following again. One creature is active at a time; summoning another replaces it.
+## Changes
 
-- Removed non-combat livestock from the mount selector.
-- Extended private walk/run selector switching and late animation-layer handling across Wolf, Dog, Bear and Boar families.
-- Suspended native controller-facing updates during rider control to prevent mount rotation from fighting the rider heading.
+- Split Summon into **Beasts** and **Pets**. White House Cat appears first, followed by Rabbit, Chicken, Goat and Sheep.
+- Pets follow without fighting, stay protected from damage and cannot be ridden. They walk nearby and use native running profiles to catch up. The white cat was checked following in game; the other pet entries still need individual visual validation.
+- Pets remain silent. Petting is not implemented. Beasts answer when addressed directly and no longer join automatic battle, loot or exploration comments. Human companion reaction settings stay unchanged.
+- Improved addon startup recovery and kept menu communication active if a creature update reports an error.
+- Clarified riding instructions in Help: summon through **Shift+F5**, then approach and press **Shift+F6**. Animals summoned through the main F5 menu are ordinary companions, not mounts.
+
+## Settings and defaults
+
+Pets are summoned manually and replace the current creature, just like beasts. One creature is active at a time. Pets hide riding-speed and seat-position controls. Beast **Spoken replies** remains On by default; Off uses supported local typed commands. Size and riding speed still default to 100%. Interface and voice language default to Auto. Existing main-mod reaction settings are unchanged.
 
 ## Installation
 
-Install **AI NPC Companions System 0.5.5 or later**, using Complete or both Scripts and Runtime. Also install **UE4SS for Dawnwalker 1.2.1 RC6** and **Dawnwalker Mod Menu 1.0.7 or later**, with game version **1.05**. Older main-mod releases do not contain the required creature service.
+Close the game and extract **Rideable-Mount-Companions-0.1.1.zip** into the game installation folder, merging its `Dawnwalker` folder. Back up and restore the addon's configuration files to preserve personalised settings. Load a save and open **Shift+F5 > Summon > Pets** for the cat, or **Beasts** for a mount.
 
-Extract the ZIP into the game installation folder, keeping the `Dawnwalker/Binaries/Win64/ue4ss/Mods` structure. Restart the game and load a save. Press **Shift+F5**, select a creature and Summon. Press **Shift+F6** nearby to ride. WASD moves; Shift runs. Both shortcuts can be remapped.
+Requires **AI NPC Companions System 0.5.6 or later**, with Complete or both Scripts and Runtime, **UE4SS for Dawnwalker 1.2.1 RC6**, **Dawnwalker Mod Menu 1.0.7 or later**, and game **1.05**. Update both the main mod and this addon to enable the new per-creature reaction opt-out. Pet spawning and following are owned by this addon.
 
-The addon ZIP contains Lua, public character IDs, settings, offline translations and documentation. It uses the main mod's Runtime, with no separate executable or account setup.
+This remains one ZIP containing scripts, configuration, public profile IDs and translations. It contains no EXE or DLL and reuses the installed main-mod Runtime.
 
-[Main mod downloads](https://github.com/alystria-ai/AI-Companion-Mod-For-Blood-of-Dawnwalker/releases/latest) | [Player guide](https://github.com/alystria-ai/Rideable-Mount-Companions#readme)
+[Player guide](https://github.com/alystria-ai/Rideable-Mount-Companions#readme) | [Main mod downloads](https://github.com/alystria-ai/AI-Companion-Mod-For-Blood-of-Dawnwalker/releases/latest)

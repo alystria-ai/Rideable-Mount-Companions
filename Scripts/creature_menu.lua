@@ -46,7 +46,7 @@ local function pollKeys(force)
  for _,action in ipairs({'SingleText','SingleVoice'})do sharedKeys[action]=source:match(action..'%s*=%s*([%w]+)')or(action=='SingleText'and'F6'or'F7')end
 end
 local function dependencies()
- if AI then return end
+ if AI and Theme then return end
  sharedRuntime=options.sharedPayload..'/runtime'
  local modules={runtime_path=sharedRuntime}
  local allowed={ai_state=true,ui_input=true,ui_font=true,ui_localization=true,ui_translations=true}
@@ -57,8 +57,10 @@ local function dependencies()
   local fn=assert(loadfile(options.sharedPayload..'/mod/Scripts/'..name..'.lua','t',env))
   modules[name]=fn();return modules[name]
  end
- AI=env.require('ai_state');Input=env.require('ui_input');Font=env.require('ui_font');Language=env.require('ui_localization')
- Theme=assert(loadfile(options.sharedPayload..'/../../DawnwalkerModMenu/Scripts/theme.lua'))()
+ -- Publish dependencies together so a partial load can be retried next tick.
+ local nextAI=env.require('ai_state');local nextInput=env.require('ui_input');local nextFont=env.require('ui_font');local nextLanguage=env.require('ui_localization')
+ local nextTheme=assert(loadfile(options.sharedPayload..'/../../DawnwalkerModMenu/Scripts/theme.lua'),'Install Dawnwalker Mod Menu 1.0.7 or later')()
+ AI,Input,Font,Language,Theme=nextAI,nextInput,nextFont,nextLanguage,nextTheme
 end
 local function playerIdentity(pc)
  local pawn,world=AI.playerReady(pc);if not pawn then return end
@@ -207,7 +209,8 @@ end
 local helpTopics={'Getting started','Orders','Riding','Settings','Troubleshooting'}
 local function helpDetails(topic)
  local title,body=Localize.help(topic)
- return tr(title),fmt(body,Keys.get('Menu'),Keys.get('Mount'),sharedKeys.SingleText,sharedKeys.SingleVoice)
+ local paragraphs={};for part in body:gmatch('[^\n]+')do paragraphs[#paragraphs+1]=fmt(part,Keys.get('Menu'),Keys.get('Mount'),sharedKeys.SingleText,sharedKeys.SingleVoice)end
+ return tr(title),table.concat(paragraphs,'\n\n')
 end
 local refresh,renderPage
 refresh=function()
@@ -224,7 +227,7 @@ refresh=function()
  local mounted=state.mounted==true or active and active.mounted==true
  local restoring=state.mountState=='restoring'
  if v.page=='Summon'then
-  text(v.name,choice and(choice.name..(choice.rideable==false and ' (combat only)'or''))or 'Choose a creature')
+  text(v.name,choice and(choice.name..(choice.pet and ' (pet)'or choice.rideable==false and ' (combat only)'or''))or 'Choose a creature')
   enabled(v.summon,choice~=nil and choice.enabled~=false and not state.loading)
   for _,item in ipairs(v.buttons)do if item.creatureId then item.active=choice and item.creatureId==choice.id or false end end
  elseif v.page=='Party'then
@@ -232,7 +235,7 @@ refresh=function()
   text(v.partyName,active and active.name or 'Your party is empty')
   text(v.partyMode,restoring and 'Restoring player control' or state.loading and 'Operation in progress' or mounted and 'Currently riding' or active and 'Travelling companion' or 'Choose a creature on Summon to begin.')
   local key=Keys.get('Mount')
-  text(v.description,active and(active.rideable==false and 'Combat companion; no native ground-riding gait.'or key..' · Mount / dismount')or 'Choose a creature on Summon.')
+  text(v.description,active and(active.pet and 'Protected pet. Follows you without fighting or riding.'or active.rideable==false and 'Combat companion; no native ground-riding gait.'or key..' · Mount / dismount')or 'Choose a creature on Summon.')
  elseif v.page=='Settings'then
   text(v.name,'Conversation')
   text(v.description,'')
@@ -297,7 +300,20 @@ renderPage=function()
  if v.page~='Summon'then v.description=paragraph(detail,'',23,8)end
  if v.page=='Summon'then
   local state=controller:view();local group,first
+  v.category=v.category or(selection(state)and selection(state).pet and 'Pets'or'Beasts')
+  local categories=new('HorizontalBox');add(list,categories):SetPadding({Left=0,Top=0,Right=0,Bottom=14})
+  for _,name in ipairs({'Beasts','Pets'})do
+   local category=name;local item=button(categories,name,function()
+    if v.category==category then return end
+    v.category=category;v.autoCloseSummon=nil;v.notice=''
+    for _,entry in ipairs(controller:view().roster)do
+     if (entry.pet and 'Pets'or'Beasts')==category then controller:select(entry.id);break end
+    end
+    renderPage()
+   end,318,false);item.active=v.category==category
+  end
   for _,entry in ipairs(state.roster or {})do
+   if (entry.pet and 'Pets'or'Beasts')==v.category then
    if entry.group~=group then group=entry.group;add(list,caption(group or 'Creatures',28)):SetPadding({Left=0,Top=first and 18 or 0,Right=0,Bottom=7})end
    local choice=entry;if choice.enabled~=false and not first then first=choice end
    local item=button(list,choice.name,function()
@@ -305,8 +321,10 @@ renderPage=function()
     controller:select(choice.id);v.selected=choice;v.notice='';refresh()
    end,646,false);item.creatureId=choice.id;enabled(item,choice.enabled~=false)
   end
+  end
   if not selection(state)and first then controller:select(first.id);v.selected=first end
   slider(detail,'Creature size','size',true)
+  if v.category~='Pets'then
   slider(detail,'Riding speed','speed',true)
   add(detail,caption('Rider positioning',26)):SetPadding({Left=0,Top=12,Right=0,Bottom=4})
   slider(detail,'Height','height',true);slider(detail,'Forward / back','forward',true);slider(detail,'Left / right','side',true)
@@ -315,6 +333,7 @@ renderPage=function()
    for _,key in ipairs({'height','forward','side'})do applySetting(key,defaults[key])end
    for _,row in ipairs(v.sliders)do if Settings.isSeat(row.key)then row.mountId=nil end end;refresh()
   end,694,false)
+  else paragraph(detail,'Protected pet. Follows you without fighting or riding.',23,12)end
   local actions=new('HorizontalBox');add(detail,actions):SetPadding({Left=0,Top=20,Right=0,Bottom=6})
   v.summon=button(actions,'Summon',function()
    if not v.selected then return end

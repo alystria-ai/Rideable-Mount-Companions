@@ -7,6 +7,7 @@ function M.text(value,L)
  value=tostring(value or'');if L.index<=1 then return value end
  local row=data.rows[value];if row then return row[L.index-1]or value end
  local inherited=L.text(value);if inherited~=value then return inherited end
+ local pet=value:match('^(.-) %(pet%)$');if pet then return M.text(pet,L)..' ('..M.text('Pets',L)..')'end
  local name=value:match('^Loading (.+)%.%.%.$');if name then return render('Loading {0}...',name,L)end
  name=value:match('^(.+) ready%.$');if name then return render('{0} ready.',name,L)end
  for _,prefix in ipairs(modifiers)do

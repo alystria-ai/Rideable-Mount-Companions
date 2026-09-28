@@ -1254,12 +1254,89 @@
       "Выберите существо и призовите его.",
       "生物を選んで召喚してください。",
       "생물을 고른 뒤 소환하세요."
+    ],
+    "Beasts": [
+      "野兽",
+      "野獸",
+      "Bestias",
+      "Feras",
+      "Bêtes",
+      "Bestien",
+      "Звери",
+      "獣",
+      "야수"
+    ],
+    "Pets": [
+      "宠物",
+      "寵物",
+      "Mascotas",
+      "Animais de estimação",
+      "Animaux de compagnie",
+      "Haustiere",
+      "Питомцы",
+      "ペット",
+      "반려동물"
+    ],
+    "White House Cat": [
+      "白色家猫",
+      "白色家貓",
+      "Gato doméstico blanco",
+      "Gato doméstico branco",
+      "Chat domestique blanc",
+      "Weiße Hauskatze",
+      "Белый домашний кот",
+      "白い家猫",
+      "흰 집고양이"
+    ],
+    "Rabbit": [
+      "兔子",
+      "兔子",
+      "Conejo",
+      "Coelho",
+      "Lapin",
+      "Kaninchen",
+      "Кролик",
+      "ウサギ",
+      "토끼"
+    ],
+    "Chicken": [
+      "鸡",
+      "雞",
+      "Gallina",
+      "Galinha",
+      "Poule",
+      "Huhn",
+      "Курица",
+      "ニワトリ",
+      "닭"
+    ],
+    "Protected pet. Follows you without fighting or riding.": [
+      "受保护的宠物。跟随你，不战斗，也不能骑乘。",
+      "受保護的寵物。跟隨你，不戰鬥，也不能騎乘。",
+      "Mascota protegida. Te sigue sin luchar ni poder montarla.",
+      "Animal protegido. Segue você sem lutar e não pode ser montado.",
+      "Animal protégé. Il vous suit sans combattre et ne peut pas être monté.",
+      "Geschütztes Haustier. Folgt dir ohne zu kämpfen und kann nicht geritten werden.",
+      "Защищённый питомец. Следует за вами, не сражается и не служит ездовым животным.",
+      "保護されたペット。戦闘せずに付いてきます。騎乗はできません。",
+      "보호받는 반려동물입니다. 전투 없이 따라오며 탈 수 없습니다."
+    ],
+    "Use Shift+F5 to summon mounts. Animals summoned with F5 are ordinary companions and cannot be ridden.": [
+      "用 Shift+F5 召唤坐骑。用 F5 召唤的动物是普通伙伴，不能骑乘。",
+      "用 Shift+F5 召喚坐騎。用 F5 召喚的動物是普通夥伴，不能騎乘。",
+      "Invoca monturas con Shift+F5. Los animales invocados con F5 son compañeros normales y no se pueden montar.",
+      "Use Shift+F5 para invocar montarias. Animais invocados com F5 são companheiros comuns e não podem ser montados.",
+      "Invoquez les montures avec Maj+F5. Les animaux invoqués avec F5 sont des compagnons ordinaires et ne peuvent pas être montés.",
+      "Beschwöre Reittiere mit Umschalt+F5. Mit F5 beschworene Tiere sind normale Gefährten und können nicht geritten werden.",
+      "Призывайте ездовых животных через Shift+F5. Животные, призванные через F5, являются обычными спутниками: ездить на них нельзя.",
+      "騎乗動物は Shift+F5 で召喚してください。F5 で召喚した動物は通常の仲間で、騎乗できません。",
+      "Shift+F5로 탈것을 소환하세요. F5로 소환한 동물은 일반 동료이며 탈 수 없습니다."
     ]
   },
   "help": {
-    "Getting started": "Choose a creature, adjust size and speed, then Summon. One mount at a time; summoning another replaces it. The menu closes when loading finishes.",
+    "Getting started": "Choose a creature, adjust size and speed, then Summon. One mount at a time; summoning another replaces it. The menu closes when loading finishes.\n\nUse Shift+F5 to summon mounts. Animals summoned with F5 are ordinary companions and cannot be ridden.",
     "Orders": "Dismount, face your creature, then use {2} for text or {3} for voice. Ask it to follow, wait, approach, look at you, attack nearby enemies or leave. Spoken replies Off uses local typed commands only.",
-    "Riding": "Use {1} nearby to mount or dismount. WASD moves; hold Shift to run. Combat dismounts you automatically. Peaceful animals cannot fight. First person follows the main mod camera setting.",
+    "Riding": "Use {1} nearby to mount or dismount. WASD moves; hold Shift to run. Combat dismounts you automatically. Peaceful animals cannot fight. First person follows the main mod camera setting.\n\nUse Shift+F5 to summon mounts. Animals summoned with F5 are ordinary companions and cannot be ridden.",
     "Settings": "Size and speed: 50% to 250%. Rider offsets apply live. Voices Auto uses English Kokoro for English UI and multilingual voices otherwise. Interface language can follow the main mod or be selected here.",
     "Troubleshooting": "Close other menus first. Move closer or into open ground if riding fails. Both main-mod downloads are required. Restart after installing this add-on. For support, use the main mod Help > Copy logs."
   }
